@@ -1,0 +1,96 @@
+<meta name="viewport"
+    content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<meta name="format-detection" content="telephone=no">
+
+
+<body>
+    <h3>WebSocketTest</h3>
+    <div id="login">
+        <div>
+            <input id="serverIP" type="text" placeholder="Server IP" value="127.0.0.1" autofocus="autofocus" />
+            <input id="serverPort" type="text" placeholder="Server Port" value="6789" />
+            <input id="btnConnect" type="button" value="Connect" onclick="connect()" />
+        </div>
+        <div>
+            <input id="sendText" type="text" placeholder="Send Text" value="I'm WebSocket Client!" />
+            <input id="btnSend" type="button" value="Send" onclick="send()" />
+        </div>
+        <div>
+            <div>
+                Message from server
+            </div>
+            <textarea id="txtContent" cols="50" rows="10" readonly="readonly"></textarea>
+            <script>
+                var socket;
+
+                function connect() {
+                    var host = "ws://" + $("serverIP").value + ":" + $("serverPort").value + "/"
+                    socket = new WebSocket(host);
+                    try {
+
+                        socket.onopen = function (msg) {
+                            $("btnConnect").disabled = true;
+                            alert("Connection succeed!");
+                        };
+
+                        socket.onmessage = function (msg) {
+                            if (typeof msg.data == "string") {
+                                displayContent(msg.data);
+                            }
+                            else {
+                                alert("Not a text message.");
+                            }
+                        };
+
+                        socket.onclose = function (msg) { alert("socket closed!") };
+                    }
+                    catch (ex) {
+                        log(ex);
+                    }
+                }
+
+                function send() {
+                    var msg = $("sendText").value + '\0'
+                    socket.send(msg);
+                }
+
+                window.onbeforeunload = function () {
+                    try {
+                        socket.close();
+                        socket = null;
+                    }
+                    catch (ex) {
+                    }
+                };
+
+                function $(id) { return document.getElementById(id); }
+
+                Date.prototype.Format = function (fmt) { //author: meizz 
+                    var o = {
+                        "M+": this.getMonth() + 1, //月份 
+                        "d+": this.getDate(), //日 
+                        "h+": this.getHours(), //小时 
+                        "m+": this.getMinutes(), //分 
+                        "s+": this.getSeconds(), //秒 
+                        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+                        "S": this.getMilliseconds() //毫秒 
+                    };
+                    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+                    for (var k in o)
+                        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+                    return fmt;
+                }
+
+                function displayContent(msg) {
+                    $("txtContent").value += "\r\n" + new Date().Format("yyyy/MM/dd hh:mm:ss") + ":  " + msg;
+                }
+                function onkey(event) { if (event.keyCode == 13) { send(); } }
+            </script>
+        </div>
+    </div>
+</body>
